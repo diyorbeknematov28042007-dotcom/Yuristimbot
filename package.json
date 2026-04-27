@@ -1,0 +1,14 @@
+{
+  "name": "legaluz-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "artifacts/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter @workspace/api-server run dev",
+    "build": "pnpm --filter @workspace/api-server run build",
+    "start": "node --enable-source-maps artifacts/api-server/dist/index.mjs"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

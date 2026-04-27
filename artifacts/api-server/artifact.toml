@@ -1,0 +1,8 @@
+[deployment]
+deploymentType = "vm"
+build = "pnpm --filter @workspace/api-server run build"
+run = "node --enable-source-maps artifacts/api-server/dist/index.mjs"
+
+[[ports]]
+localPort = 3000
+externalPort = 80
