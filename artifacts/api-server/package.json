@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsup src/index.ts --format esm --out-dir dist --ext-in ts=ts --ext mjs"
+    "build": "tsup src/index.ts --format esm --out-dir dist"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
