@@ -32,7 +32,7 @@ export async function askGemini(question: string, lang: Lang): Promise<string> {
     try {
       const genAI = new GoogleGenerativeAI(key);
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash-latest',
+        model: 'gemini-2.5-flash',
         generationConfig: { maxOutputTokens: 8192 },
         systemInstruction: systemPrompts[lang],
       });
