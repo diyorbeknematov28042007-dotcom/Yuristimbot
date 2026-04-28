@@ -1,19 +1,14 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { Lang } from '../bot/languages.js';
 
-// Barcha API keylarni to'plash
 const apiKeys = [
+  process.env.GEMINI_API_KEY,
   process.env.GEMINI_API_KEY_1,
   process.env.GEMINI_API_KEY_2,
   process.env.GEMINI_API_KEY_3,
   process.env.GEMINI_API_KEY_4,
   process.env.GEMINI_API_KEY_5,
 ].filter(Boolean) as string[];
-
-// Agar GEMINI_API_KEY ham bo'lsa, uni ham qo'shish
-if (process.env.GEMINI_API_KEY) {
-  apiKeys.unshift(process.env.GEMINI_API_KEY);
-}
 
 let currentKeyIndex = 0;
 
@@ -30,17 +25,14 @@ const systemPrompts: Record<Lang, string> = {
 };
 
 export async function askGemini(question: string, lang: Lang): Promise<string> {
-  if (apiKeys.length === 0) {
-    throw new Error('Hech qanday Gemini API key topilmadi');
-  }
+  if (apiKeys.length === 0) throw new Error('API key topilmadi');
 
-  // Har bir keyni sinab ko'radi, biri ishlamasa keyingisiga o'tadi
   for (let attempt = 0; attempt < apiKeys.length; attempt++) {
     const key = getNextKey();
     try {
       const genAI = new GoogleGenerativeAI(key);
       const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-1.5-flash-latest',
         generationConfig: { maxOutputTokens: 8192 },
         systemInstruction: systemPrompts[lang],
       });
@@ -50,7 +42,6 @@ export async function askGemini(question: string, lang: Lang): Promise<string> {
       const isLimitError =
         error?.status === 429 ||
         error?.message?.includes('quota') ||
-        error?.message?.includes('limit') ||
         error?.message?.includes('RESOURCE_EXHAUSTED');
 
       if (isLimitError && attempt < apiKeys.length - 1) {
