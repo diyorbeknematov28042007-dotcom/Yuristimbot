@@ -12,11 +12,10 @@ const systemPrompts: Record<Lang, string> = {
 export async function askGemini(question: string, lang: Lang): Promise<string> {
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       generationConfig: { maxOutputTokens: 8192 },
       systemInstruction: systemPrompts[lang],
     });
-
     const result = await model.generateContent(question);
     return result.response.text();
   } catch (error) {
