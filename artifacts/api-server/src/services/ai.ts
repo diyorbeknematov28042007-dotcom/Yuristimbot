@@ -1,7 +1,27 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { Lang } from '../bot/languages.js';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// Barcha API keylarni to'plash
+const apiKeys = [
+  process.env.GEMINI_API_KEY_1,
+  process.env.GEMINI_API_KEY_2,
+  process.env.GEMINI_API_KEY_3,
+  process.env.GEMINI_API_KEY_4,
+  process.env.GEMINI_API_KEY_5,
+].filter(Boolean) as string[];
+
+// Agar GEMINI_API_KEY ham bo'lsa, uni ham qo'shish
+if (process.env.GEMINI_API_KEY) {
+  apiKeys.unshift(process.env.GEMINI_API_KEY);
+}
+
+let currentKeyIndex = 0;
+
+function getNextKey(): string {
+  const key = apiKeys[currentKeyIndex % apiKeys.length];
+  currentKeyIndex++;
+  return key;
+}
 
 const systemPrompts: Record<Lang, string> = {
   uz: "Siz O'zbekiston qonunchiligiga ixtisoslashgan professional yurist assistentsiz. Foydalanuvchilarga O'zbek tilida yuridik maslahat bering. Aniq va tushunarli javob bering.",
@@ -10,18 +30,38 @@ const systemPrompts: Record<Lang, string> = {
 };
 
 export async function askGemini(question: string, lang: Lang): Promise<string> {
-  try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      generationConfig: { maxOutputTokens: 8192 },
-      systemInstruction: systemPrompts[lang],
-    });
-    const result = await model.generateContent(question);
-    return result.response.text();
-  } catch (error) {
-    console.error('Gemini error:', error);
-    throw error;
+  if (apiKeys.length === 0) {
+    throw new Error('Hech qanday Gemini API key topilmadi');
   }
+
+  // Har bir keyni sinab ko'radi, biri ishlamasa keyingisiga o'tadi
+  for (let attempt = 0; attempt < apiKeys.length; attempt++) {
+    const key = getNextKey();
+    try {
+      const genAI = new GoogleGenerativeAI(key);
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-2.0-flash',
+        generationConfig: { maxOutputTokens: 8192 },
+        systemInstruction: systemPrompts[lang],
+      });
+      const result = await model.generateContent(question);
+      return result.response.text();
+    } catch (error: any) {
+      const isLimitError =
+        error?.status === 429 ||
+        error?.message?.includes('quota') ||
+        error?.message?.includes('limit') ||
+        error?.message?.includes('RESOURCE_EXHAUSTED');
+
+      if (isLimitError && attempt < apiKeys.length - 1) {
+        console.warn(`API key ${attempt + 1} limiti tugadi, keyingisiga o'tilmoqda...`);
+        continue;
+      }
+      console.error('Gemini error:', error);
+      throw error;
+    }
+  }
+  throw new Error('Barcha API keylar limiti tugadi');
 }
 
 export function splitLongMessage(text: string, maxLen = 4000): string[] {
