@@ -4,11 +4,11 @@ services:
     runtime: node
     region: oregon
     plan: free
-    buildCommand: "corepack enable pnpm && pnpm install && pnpm build"
+    buildCommand: "npm install && ./node_modules/.bin/pnpm install && ./node_modules/.bin/pnpm build"
     startCommand: "node --enable-source-maps artifacts/api-server/dist/index.mjs"
     envVars:
       - key: NODE_VERSION
-        value: 20.12.7
+        value: "20.12.7"
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: DATABASE_URL
